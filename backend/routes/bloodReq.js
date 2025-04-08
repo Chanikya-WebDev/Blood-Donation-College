@@ -59,8 +59,9 @@ router.get("/blood-requests", async (req, res) => {
   }
 });
 
-router.delete('/blood-request/:id', async (req, res) => {
+router.put('/blood-request/:id', async (req, res) => {
   const { id } = req.params;
+  const { requestStatus } = req.body; // Get the status from the request body
 
   try {
     // Check if the blood request exists
@@ -69,19 +70,23 @@ router.delete('/blood-request/:id', async (req, res) => {
       return res.status(404).json({ message: 'Blood request not found.' });
     }
 
-    // Check if the blood request has already been rejected or not
-    // if (bloodRequest.status === 'rejected') {
-    //   return res.status(400).json({ message: 'This blood request has already been rejected.' });
+    // Validate the status provided by the admin (accepted or rejected)
+    // if (status !== 'accepted' && status !== 'rejected') {
+    //   return res.status(400).json({ message: 'Invalid status. Please use "accepted" or "rejected".' });
     // }
 
-    // Remove the blood request
-    await BloodRequest.findByIdAndDelete(id);
+    // Update the status of the blood request
+    bloodRequest.requestStatus = requestStatus;
 
-    return res.status(200).json({ message: 'Blood request successfully deleted.' });
+    // Save the updated blood request
+    await bloodRequest.save();
+
+    return res.status(200).json({ message: `Blood request ${requestStatus} successfully.` });
   } catch (error) {
     return res.status(500).json({ message: 'Server error. Please try again later.' });
   }
 });
+
 
 router.post("/blood-requests", upload.single("doctorPrescription"), createBloodRequest);
 

@@ -36,29 +36,33 @@ const AdminBloodRequestPage = () => {
   const handleAcceptRequest = async (requestId, bloodGroup, requestedAmount) => {
     const availableBlood = inventory.find(item => item.bloodGroup === bloodGroup);
     
-    if (availableBlood.amount >= requestedAmount) {
+    if (availableBlood.bloodAmount >= requestedAmount) {
       try {
-        // Accept the request and update inventory
-        const updateInventoryResponse = await fetch(`http://localhost:5000/api/blood-inventory`, {
+        // Update inventory after accepting the request
+        const updateInventoryResponse = await fetch(`http://localhost:5000/api/inventory`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ bloodGroup:bloodGroup,bloodAmount: availableBlood.bloodAmount - requestedAmount }),
+          body: JSON.stringify({ bloodGroup: bloodGroup, bloodAmount: availableBlood.bloodAmount - requestedAmount }),
         });
 
         if (!updateInventoryResponse.ok) {
           throw new Error("Failed to update blood inventory");
         }
 
-        // Mark the request as accepted
-        // const acceptRequestResponse = await fetch(`/api/blood-request/${requestId}/accept`, {
-        //   method: "PUT",
-        // });
+        // Update the requestStatus of the blood request to 'accepted'
+        const acceptRequestResponse = await fetch(`http://localhost:5000/api/blood-request/${requestId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ requestStatus: "Approved" }), // Sending requestStatus as "accepted"
+        });
 
-        // if (!acceptRequestResponse.ok) {
-        //   throw new Error("Failed to accept the request");
-        // }
+        if (!acceptRequestResponse.ok) {
+          throw new Error("Failed to accept the request");
+        }
 
         // Update the state to reflect the changes
         setRequests((prevRequests) =>
@@ -79,63 +83,71 @@ const AdminBloodRequestPage = () => {
 
   // Handle rejecting a blood request
   const handleRejectRequest = async (requestId) => {
-    
-      try {
-        const response = await fetch(`http://localhost:5000/api/blood-request/${requestId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-  
-        if (!response.ok) {
-          throw new Error('Failed to delete the blood request');
-        }
-  
-        // Remove the deleted blood request from the state
-        setRequests(requests.filter((request) => request._id !== requestId));
-        alert('Blood request deleted successfully');
-      } catch (err) {
-        setError('Failed to delete the blood request');
+    try {
+      // Update the requestStatus of the blood request to 'rejected'
+      const rejectRequestResponse = await fetch(`http://localhost:5000/api/blood-request/${requestId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ requestStatus: "Rejected" }), // Sending requestStatus as "rejected"
+      });
+
+      if (!rejectRequestResponse.ok) {
+        throw new Error("Failed to reject the request");
       }
+
+      // Remove the rejected blood request from the state
+      setRequests((prevRequests) => prevRequests.filter((request) => request._id !== requestId));
+
+      alert('Blood request rejected successfully');
+    } catch (err) {
+      setError('Failed to reject the blood request');
+    }
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
-      <h1 className="text-3xl font-bold text-center mb-6">Blood Requests Management</h1>
+    <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8">
+      <h1 className="text-3xl font-bold text-center text-blue-600 mb-6">Blood Requests Management</h1>
 
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         {requests.length === 0 ? (
-          <p className="text-center">No blood requests available</p>
+          <p className="text-center text-lg text-gray-500">No blood requests available</p>
         ) : (
           requests.map((request) => {
-            const { _id, bloodType, bloodAmount } = request;
+            const { _id, bloodType, bloodAmount, requestStatus } = request;
             const availableBlood = inventory.find((item) => item.bloodGroup === bloodType);
             const isAcceptDisabled = availableBlood ? availableBlood.bloodAmount < bloodAmount : true;
 
             return (
-              <div key={_id} className="flex items-center justify-between p-4 bg-gray-100 rounded-lg shadow-md">
-                <div className="flex flex-col">
-                  <span className="text-lg font-semibold">{bloodType}</span>
-                  <span className="text-sm">Requested: {bloodAmount} units</span>
-                  <span className="text-sm">Available: {availableBlood ? availableBlood.bloodAmount : 0} units</span>
+              <div key={_id} className="flex flex-col p-6 bg-gray-50 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="text-xl font-semibold text-blue-600">{bloodType}</div>
+                  <div className={`text-sm font-semibold ${requestStatus === 'Approved' ? 'text-green-500' : requestStatus === 'Rejected' ? 'text-red-500' : 'text-yellow-500'}`}>
+                    {requestStatus.charAt(0).toUpperCase() + requestStatus.slice(1)}
+                  </div>
                 </div>
 
-                <div className="flex space-x-4">
+                <div className="mb-4">
+                  <p className="text-lg text-gray-700">Requested: {bloodAmount} units</p>
+                  <p className="text-sm text-gray-500">Available: {availableBlood ? availableBlood.bloodAmount : 0} units</p>
+                </div>
+
+                <div className="flex space-x-4 mt-4 justify-end">
                   <button
                     onClick={() => handleAcceptRequest(_id, bloodType, bloodAmount)}
                     disabled={isAcceptDisabled}
-                    className={`text-2xl ${isAcceptDisabled ? "text-gray-500" : "text-green-500"}`}
+                    className={`px-4 py-2 text-white cursor-pointer rounded-lg shadow-md transition-all duration-300 ${isAcceptDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
                   >
-                    ✓
+                    Accept
                   </button>
                   <button
                     onClick={() => handleRejectRequest(_id)}
-                    className="text-2xl text-red-500"
+                    className="px-4 py-2 text-white bg-red-600 cursor-pointer rounded-lg shadow-md hover:bg-red-700 transition-all duration-300"
                   >
-                    ✖
+                    Reject
                   </button>
                 </div>
               </div>
