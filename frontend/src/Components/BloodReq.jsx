@@ -1,16 +1,24 @@
 import { useState, useEffect } from "react";
-// import { useParams, useHistory } from "react-router-dom";
+import { useLocation } from "react-router-dom"; // To access query parameters
+// For sending API requests
 
 export default function BloodRequestForm() {
-  const { bloodType } = 'A+'; // Get the blood type from the URL
-//   const history = useHistory();
+  // Get the blood type from the query parameter
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const initialBloodType = queryParams.get('bloodType'); // Default to 'A+' if not provided
+  
+
+  // State for the blood type
+  const [bloodType, setBloodType] = useState(initialBloodType);
 
   // State to hold form data
   const [formData, setFormData] = useState({
     name: "",
     contact: "",
+    bloodType,
     bloodAmount: "",
-    doctorPrescription: null, // Changed to null to store file
+    doctorPrescription: null,
     hospitalName: "",
     hospitalAddress: "",
   });
@@ -26,29 +34,47 @@ export default function BloodRequestForm() {
 
   // Handle file change for doctor's prescription
   const handleFileChange = (e) => {
-    const file = e.target.files[0]; // Only one file
+    const file = e.target.files[0];
     setFormData((prevData) => ({
       ...prevData,
-      doctorPrescription: file, // Store the file in the state
+      doctorPrescription: file,
     }));
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.doctorPrescription) {
       alert("Please upload a doctor's prescription.");
       return;
     }
 
-    // Normally, here you'd call an API to submit the form data
-    console.log("Request Submitted: ", formData);
+    try {
+      const formDataToSend = new FormData();
+      formDataToSend.append("name", formData.name);
+      formDataToSend.append("contact", formData.contact);
+      formDataToSend.append("bloodType", bloodType);
+      formDataToSend.append("bloodAmount", formData.bloodAmount);
+      formDataToSend.append("doctorPrescription", formData.doctorPrescription);
+      formDataToSend.append("hospitalName", formData.hospitalName);
+      formDataToSend.append("hospitalAddress", formData.hospitalAddress);
 
-    // Simulate form submission and alert
-    alert(`Request for ${formData.bloodAmount} ml of blood ${bloodType} submitted.`);
-    
-    // Reset form data after submission
+      const response = await fetch("http://localhost:5000/api/blood-requests", {
+        method: "POST",
+        body: formDataToSend,
+      });
+
+      if (response.status===201) {
+        alert(`Request for ${formData.bloodAmount} ml of blood ${bloodType} submitted successfully.`);
+      } else {
+        alert("Failed to submit the request.");
+      }
+    } catch (error) {
+      console.error("Error submitting the request:", error);
+      alert("An error occurred while submitting the request.");
+    }
+
     setFormData({
       name: "",
       contact: "",
@@ -57,17 +83,7 @@ export default function BloodRequestForm() {
       hospitalName: "",
       hospitalAddress: "",
     });
-    
-    // history.push("/"); // Redirect to the home or inventory page
   };
-
-//   useEffect(() => {
-//     // Prefill the form with the blood type selected
-//     setFormData((prevData) => ({
-//       ...prevData,
-//       bloodType: bloodType,
-//     }));
-//   }, [bloodType]);
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-white shadow-xl rounded-lg mt-6">

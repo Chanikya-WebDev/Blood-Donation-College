@@ -42,6 +42,47 @@ const createBloodRequest = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+router.get("/blood-requests", async (req, res) => {
+  try {
+    // Find all blood requests in the database
+    const bloodRequests = await BloodRequest.find();
+
+    // Send the response with the data
+    res.status(200).json( bloodRequests);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to retrieve blood requests",
+    });
+  }
+});
+
+router.delete('/blood-request/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // Check if the blood request exists
+    const bloodRequest = await BloodRequest.findById(id);
+    if (!bloodRequest) {
+      return res.status(404).json({ message: 'Blood request not found.' });
+    }
+
+    // Check if the blood request has already been rejected or not
+    // if (bloodRequest.status === 'rejected') {
+    //   return res.status(400).json({ message: 'This blood request has already been rejected.' });
+    // }
+
+    // Remove the blood request
+    await BloodRequest.findByIdAndDelete(id);
+
+    return res.status(200).json({ message: 'Blood request successfully deleted.' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Server error. Please try again later.' });
+  }
+});
+
 router.post("/blood-requests", upload.single("doctorPrescription"), createBloodRequest);
 
 // export default { createBloodRequest, upload };

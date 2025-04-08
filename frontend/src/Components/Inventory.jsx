@@ -13,6 +13,8 @@ export default function BloodInventory() {
     "O+": 100,
     "O-": 80,
   });
+  
+  
 
   return (
     <div className="flex">
@@ -80,7 +82,7 @@ export default function BloodInventory() {
               <div className="text-lg text-gray-600 mb-4">Available Blood Units</div>
 
               {/* Request button */}
-              <Link to="/BloodReq">
+              <Link to={`/BloodReq?bloodType=${bloodType}`}>
                 <button className="mt-4 px-6 py-2 bg-green-500 text-white rounded-full hover:bg-green-600 transition-colors">
                   Request Blood
                 </button>

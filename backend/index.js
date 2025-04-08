@@ -5,6 +5,7 @@ import { config } from 'dotenv';
 import donorRoutes from './routes/donors.js';
 import certificateRoutes from './routes/certificates.js';
 import bloodRequestRoutes from "./routes/bloodReq.js";
+import inventoryRoutes from './routes/inventory.js';
 import path from "path";
 import { fileURLToPath } from 'url';
 
@@ -27,6 +28,7 @@ app.use('/api', donorRoutes);
 app.use('/api', certificateRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // Serve uploaded files
 app.use("/api", bloodRequestRoutes);
+app.use('/api',inventoryRoutes);
 
 // Connect to MongoDB
 connect(process.env.MONGODB_URI).then(() => console.log('Connected to MongoDB'))

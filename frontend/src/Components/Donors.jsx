@@ -1,45 +1,48 @@
-// src/DonorList.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const DonorList = () => {
-  const [donors, setDonors] = useState([
-    {
-      id: 1,
-      name: 'John Doe',
-      approved: true,
-      phone: '123-456-7890',
-      email: 'johndoe@example.com',
-      address: '123 Main St, Springfield',
-      bloodGroup: 'O+',
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      approved: false,
-      phone: '234-567-8901',
-      email: 'janesmith@example.com',
-      address: '456 Elm St, Springfield',
-      bloodGroup: 'A-',
-    },
-    {
-      id: 3,
-      name: 'Emily Johnson',
-      approved: true,
-      phone: '345-678-9012',
-      email: 'emilyjohnson@example.com',
-      address: '789 Oak St, Springfield',
-      bloodGroup: 'B+',
-    },
-    {
-      id: 4,
-      name: 'Michael Brown',
-      approved: false,
-      phone: '456-789-0123',
-      email: 'michaelbrown@example.com',
-      address: '101 Pine St, Springfield',
-      bloodGroup: 'AB+',
-    },
-  ]);
+  const [donors, setDonors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch donor data from API when component mounts
+  useEffect(() => {
+    const fetchDonors = async () => {
+      try {
+        // Replace this URL with your API endpoint
+        const response = await fetch('http://localhost:5000/api/donors');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch donor data');
+        }
+
+        const data = await response.json();
+        setDonors(data); // Update state with the fetched donor data
+        setLoading(false); // Set loading to false once data is fetched
+      } catch (error) {
+        setError(error.message); // Set error if something went wrong
+        setLoading(false); // Set loading to false on error
+      }
+    };
+
+    fetchDonors(); // Call the function to fetch donor data
+  }, []); // Empty dependency array means this runs only once after initial render
+
+  if (loading) {
+    return (
+      <div className="container mx-auto p-8">
+        <h1 className="text-3xl font-bold text-center mb-6">Loading Donor List...</h1>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto p-8">
+        <h1 className="text-3xl font-bold text-center mb-6">Error: {error}</h1>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-8">
@@ -58,8 +61,8 @@ const DonorList = () => {
           </thead>
           <tbody>
             {donors.map((donor) => (
-              <tr key={donor.id} className={donor.approved ? 'bg-green-100' : 'bg-red-100'}>
-                <td className="py-2 px-4 border-b">{donor.name}</td>
+              <tr key={donor.donorId} className={donor.approved ? 'bg-green-100' : 'bg-red-100'}>
+                <td className="py-2 px-4 border-b">{donor.firstName} {donor.lastName}</td>
                 <td className="py-2 px-4 border-b">{donor.phone}</td>
                 <td className="py-2 px-4 border-b">{donor.email}</td>
                 <td className="py-2 px-4 border-b">{donor.address}</td>
@@ -67,10 +70,10 @@ const DonorList = () => {
                 <td className="py-2 px-4 border-b">
                   <span
                     className={`inline-block px-3 py-1 rounded-full text-white ${
-                      donor.approved ? 'bg-green-500' : 'bg-red-500'
+                      donor.eligibility ? 'bg-green-500' : 'bg-red-500'
                     }`}
                   >
-                    {donor.approved ? 'Approved' : 'Not Approved'}
+                    {donor.eligibility ? 'Approved' : 'Not Approved'}
                   </span>
                 </td>
               </tr>
