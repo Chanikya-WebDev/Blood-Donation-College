@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 
 export default function BloodInventory() {
+  // Simulate user login state
+  const [user, setUser] = useState(null); // If the user is logged in, store user info here
+
   // State for the inventory, loading, and error
   const [inventory, setInventory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,6 +29,15 @@ export default function BloodInventory() {
 
     fetchBloodInventory();
   }, []);
+
+  // Simulate user login (replace with actual login logic)
+  const handleLogin = () => {
+    setUser({ name: "John Doe" }); // Simulate a logged-in user with a name
+  };
+
+  const handleLogout = () => {
+    setUser(null); // Simulate logging out
+  };
 
   if (loading) {
     return <div className="text-center">Loading blood inventory...</div>;
@@ -76,6 +88,34 @@ export default function BloodInventory() {
             </Link>
           </li>
         </ul>
+
+        {/* Login/Sign Up links or User Profile */}
+        <div className="mt-6">
+          {user ? (
+            <div className="flex items-center">
+              {/* Profile icon and name */}
+              <div className="w-10 h-10 bg-gray-400 rounded-full mr-2 flex items-center justify-center text-white">
+                <span className="text-sm">{user.name[0]}</span>
+              </div>
+              <span className="text-lg text-white">{user.name}</span>
+              <button
+                onClick={handleLogout}
+                className="ml-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div>
+              <Link to="/login" className="block text-lg text-white hover:text-blue-500 transition-colors mb-2">
+                Login
+              </Link>
+              <Link to="/signUp" className="block text-lg text-white hover:text-blue-500 transition-colors">
+                Sign Up
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Main Content */}

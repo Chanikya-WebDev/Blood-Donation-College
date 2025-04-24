@@ -51,13 +51,13 @@ const AdminBloodRequestPage = () => {
           throw new Error("Failed to update blood inventory");
         }
 
-        // Update the requestStatus of the blood request to 'accepted'
+        // Update the requestStatus of the blood request to 'approved'
         const acceptRequestResponse = await fetch(`http://localhost:5000/api/blood-request/${requestId}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({ requestStatus: "Approved" }), // Sending requestStatus as "accepted"
+          body: JSON.stringify({ requestStatus: "Approved" }),
         });
 
         if (!acceptRequestResponse.ok) {
@@ -90,7 +90,7 @@ const AdminBloodRequestPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ requestStatus: "Rejected" }), // Sending requestStatus as "rejected"
+        body: JSON.stringify({ requestStatus: "Rejected" }),
       });
 
       if (!rejectRequestResponse.ok) {
@@ -106,28 +106,35 @@ const AdminBloodRequestPage = () => {
     }
   };
 
+  // Group requests by their status
+  const groupedRequests = {
+    pending: requests.filter(request => request.requestStatus === "Pending"),
+    approved: requests.filter(request => request.requestStatus === "Approved"),
+    rejected: requests.filter(request => request.requestStatus === "Rejected"),
+  };
+
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8">
+    <div className="max-w-6xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-8">
       <h1 className="text-3xl font-bold text-center text-blue-600 mb-6">Blood Requests Management</h1>
 
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
 
-      <div className="space-y-6">
-        {requests.length === 0 ? (
-          <p className="text-center text-lg text-gray-500">No blood requests available</p>
+      {/* Pending Requests */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold text-blue-500 mb-4">Pending Blood Requests</h2>
+        {groupedRequests.pending.length === 0 ? (
+          <p className="text-center text-lg text-gray-500">No pending requests</p>
         ) : (
-          requests.map((request) => {
+          groupedRequests.pending.map((request) => {
             const { _id, bloodType, bloodAmount, requestStatus } = request;
             const availableBlood = inventory.find((item) => item.bloodGroup === bloodType);
             const isAcceptDisabled = availableBlood ? availableBlood.bloodAmount < bloodAmount : true;
 
             return (
-              <div key={_id} className="flex flex-col p-6 bg-gray-50 rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+              <div key={_id} className="flex flex-col p-6 bg-gray-50 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 mb-4">
                 <div className="flex justify-between items-center mb-4">
                   <div className="text-xl font-semibold text-blue-600">{bloodType}</div>
-                  <div className={`text-sm font-semibold ${requestStatus === 'Approved' ? 'text-green-500' : requestStatus === 'Rejected' ? 'text-red-500' : 'text-yellow-500'}`}>
-                    {requestStatus.charAt(0).toUpperCase() + requestStatus.slice(1)}
-                  </div>
+                  <div className="text-sm font-semibold text-yellow-500">{requestStatus}</div>
                 </div>
 
                 <div className="mb-4">
@@ -149,6 +156,54 @@ const AdminBloodRequestPage = () => {
                   >
                     Reject
                   </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Approved Requests */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold text-green-500 mb-4">Approved Blood Requests</h2>
+        {groupedRequests.approved.length === 0 ? (
+          <p className="text-center text-lg text-gray-500">No approved requests</p>
+        ) : (
+          groupedRequests.approved.map((request) => {
+            const { _id, bloodType, bloodAmount, requestStatus } = request;
+            return (
+              <div key={_id} className="flex flex-col p-6 bg-green-50 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 mb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="text-xl font-semibold text-green-600">{bloodType}</div>
+                  <div className="text-sm font-semibold text-green-500">{requestStatus}</div>
+                </div>
+
+                <div className="mb-4">
+                  <p className="text-lg text-gray-700">Requested: {bloodAmount} units</p>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* Rejected Requests */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold text-red-500 mb-4">Rejected Blood Requests</h2>
+        {groupedRequests.rejected.length === 0 ? (
+          <p className="text-center text-lg text-gray-500">No rejected requests</p>
+        ) : (
+          groupedRequests.rejected.map((request) => {
+            const { _id, bloodType, bloodAmount, requestStatus } = request;
+            return (
+              <div key={_id} className="flex flex-col p-6 bg-red-50 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 mb-4">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="text-xl font-semibold text-red-600">{bloodType}</div>
+                  <div className="text-sm font-semibold text-red-500">{requestStatus}</div>
+                </div>
+
+                <div className="mb-4">
+                  <p className="text-lg text-gray-700">Requested: {bloodAmount} units</p>
                 </div>
               </div>
             );

@@ -7,6 +7,8 @@ import Certification from "./Components/Certification"
 import Donors from "./Components/Donors"
 import InventoryPage from './ADMIN/A_Inventory';
 import AdminBloodRequestPage from './ADMIN/A_bloodRequest';
+import Login from "./Components/Login";
+import Signup from "./Components/Sign__Up";
 function App() {
 
   return (
@@ -18,6 +20,8 @@ function App() {
       <Route path="/about" Component={About}/>
       <Route path='/BloodReq' Component={BloodRequestForm} />
       <Route path="/sign-up" Component={SignUp}></Route>
+      <Route path="/login" Component={Login}></Route>
+      <Route path="/signUp" Component={Signup}></Route>
      <Route path="/admin/inventory" Component={InventoryPage}></Route>
      <Route path="/admin/blood-requests" Component={AdminBloodRequestPage}></Route>
      </Routes>
